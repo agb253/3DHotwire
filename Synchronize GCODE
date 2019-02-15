@@ -1,0 +1,267 @@
+/*Read in the GCODE file.
+Remove everything except the coordinates.
+Separate each layer into its own list. P1 and P2 are the top and bottom perimeters. The interior perimeters will be called iP1 through iPN from top to bottom
+Starting with location #1 in the gcode for both P1 and P2 for part #1, find the distance of the each point on iP1 of part #1 to the line.
+Store the closest point to the line as C-iP1 (closest interior perimeter point) part#1.
+Repeat step 4 for every iPN in part#1 (meaning do step  for every interior layer), storing the closest point on each iP to the line calculated in step 6.
+Calculate the sum of the distances of C-iP’s to the line (r^2). Store this number.
+Remain on the same point on P1, but now draw a line to the next coordinate on P2 in part#1.
+Repeat step 4 through 7 for every coordinate in P2 of part#1.
+Find the lowest r^2; that is a set of synchronized coordinates.
+For every point on P1 of part#1, repeat step 4-9.
+Repeat for every part.
+ 
+
+Here’s some code snippets to plug into the pseudocode:
+import re
+*/
+with open(‘example.gcode’) as gcode:
+for line in gcode:
+line = line.strip() ##makes gcode coordinates into members of a list. Members of the list are called “line”
+##probably add a line here to append to change to a new list if there is a layer change “New Layer” should be shown in gcode
+coord = re.findall(r'[XY].?\d+.\d+’, line) ##checks for match 0-9 even or 0-9 odd \d is odd numbers. Find in “line”,
+if coord: ##meaning, if the line has numbers, the member “coord” will not be blank, if not blank –> print the coord
+print(“{} – {}”.format(coord[0], coord[1])) ## instead of print, probably append this to a list. If we call this list “Coords”
+/*If this is some example gcode
+G1 F1200 X-9.914 Y-9.843 E3.36222
+G0 F9000 X-9.843 Y-9.914
+G1 F1200 X9.914 Y9.843 E3.65844
+G0 F9000 X9.914 Y9.702
+G1 F1200 X-9.702 Y-9.914 E3.95254
+G0 F9000 X-9.560 Y-9.914
+New Layer
+‘G1 F1200 X9.914 Y8.995 E5.39123’,
+‘G0 F9000 X9.914 Y8.853’,
+‘G1 F1200 X-8.853 Y-9.914 E5.67260’
+Should end up with something like this:
+Coords = [
+[9.914, -9.843]
+[9.843, -9.914]
+[9.702, -9.914]
+[9.560, -9.914],
+[8.995, -9.914]
+[8.853, -9.914]
+]
+#this is a list of lists. [9.914, -9.843][9.843, -9.914][9.702, -9.914][9.560, -9.914] is the first layer
+
+#[8.995, -9.914][8.853, -9.914] is the second layer and so on. I’m calling each layer by the name “layer” and each list I am calling “member”
+-Separate P1 and P2 are the top and bottom perimeters (unnecessary, but might make it more clear)
+*/
+P1 = Coords.pop(0) #returns and removes first list of coordinates from the list
+P2 = Coords.pop(len(Coords)-1) ##returns and removes last list of coordinates from the list. since lists start with element 0 instead of 1, you need to use num of members-1
+
+ 
+
+This is a program to calculate the shortest distance between a line (given by two points) and a point not on that line.
+
+https://www.geeksforgeeks.org/shortest-distance-between-a-line-and-a-point-in-a-3-d-plane/
+
+
+Shortest distance between a Line and a Point in a 3-D plane
+www.geeksforgeeks.org
+Given a line passing through two points A and B and an arbitrary point C in a 3-D plane, the task is to find the shortest distance between the point C and the line passing through the points A and B. Consider a point C and a line that passes through A and B as shown in the below figure. Now Consider …
+ 
+
+// C++ program to find the Shortest
+
+// Distance Between A line and a
+
+// Given point. #Need to convert this to python
+
+#include<bits/stdc++.h>
+
+using namespace std;
+
+class Vector {
+
+private:
+
+   int x, y, z;
+
+   // 3D Coordinates of the Vector
+
+public:
+
+   Vector(int x, int y, int z)
+
+   {
+
+       // Constructor
+
+       this->x = x;
+
+       this->y = y;
+
+       this->z = z;
+
+   }
+
+   Vector operator+(Vector v); // ADD 2 Vectors
+
+   Vector operator-(Vector v); // Subtraction
+
+   int operator^(Vector v); // Dot Product
+
+   Vector operator*(Vector v); // Cross Product
+
+   float magnitude()
+
+   {
+
+       return sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+
+   }
+
+   friend ostream& operator<<(ostream& out, const Vector& v);
+
+   // To output the Vector
+
+};
+
+// ADD 2 Vectors
+
+Vector Vector::operator+(Vector v)
+
+{
+
+   int x1, y1, z1;
+
+   x1 = x + v.x;
+
+   y1 = y + v.y;
+
+   z1 = z + v.z;
+
+   return Vector(x1, y1, z1);
+
+}
+
+// Subtract 2 vectors
+
+Vector Vector::operator-(Vector v)
+
+{
+
+   int x1, y1, z1;
+
+   x1 = x – v.x;
+
+   y1 = y – v.y;
+
+   z1 = z – v.z;
+
+   return Vector(x1, y1, z1);
+
+}
+
+// Dot product of 2 vectors
+
+int Vector::operator^(Vector v)
+
+{
+
+   int x1, y1, z1;
+
+   x1 = x * v.x;
+
+   y1 = y * v.y;
+
+   z1 = z * v.z;
+
+   return (x1 + y1 + z1);
+
+}
+
+// Cross product of 2 vectors
+
+Vector Vector::operator*(Vector v)
+
+{
+
+   int x1, y1, z1;
+
+   x1 = y * v.z – z * v.y;
+
+   y1 = z * v.x – x * v.z;
+
+   z1 = x * v.y – y * v.x;
+
+   return Vector(x1, y1, z1);
+
+}
+
+// Display Vector
+
+ostream& operator<<(ostream& out,
+
+                   const Vector& v)
+
+{
+
+   out << v.x << “i “;
+
+   if (v.y >= 0)
+
+       out << “+ “;
+
+   out << v.y << “j “;
+
+   if (v.z >= 0)
+
+       out << “+ “;
+
+   out << v.z << “k” << endl;
+
+   return out;
+
+}
+
+// calculate shortest dist. from point to line
+
+#Store the closest point to the line (closest interior perimeter point) for each interior layer and for each line given by points on the perimeters
+
+If I use the previous coordinates as an example of interior coordinates: Coords = [
+[9.914, -9.843]
+[9.843, -9.914]
+[9.702, -9.914]
+[9.560, -9.914],
+[8.995, -9.914]
+[8.853, -9.914]
+]
+
+Distance function(x1,y1,x2,y2,x3,y3) → outputs distance to line made by x1,y1,x2,y2 to point x3,y3.
+
+Then Coords[layer=0] would be [9.914, -9.843][9.843, -9.914][9.702, -9.914][9.560, -9.914]
+Then Coords[0,0] would be [9.914, -9.843]
+
+Take the first coordinate in P1 or P1[0] and first coordinate in P2 or P2[0], calculate distance to Coords[0,0] #this is the first coordinate in the first inner layer. Repeat with every Coords[0,n] and keep the coordinate with the shortest distance i = iterator. Repeat again with Coords[1,0 through n] for however many layers there are or Coords[n,n] j = iterator. Save the sum of the shortest distances to each layer. Repeat with P1[0] to P2[1 to n] k = iterator. Each time saving the sum of the shortest distances. Compare each P1[0] connection to P2[1 to n] to find the line that has the lowest sum of shortest distances. Once found, save that in a list [x1,y1] [x2,y2]. Repeat for every P1[0 through n] l = iterator.
+
+ 
+
+l=0;
+
+While I <= len(P1)
+
+k=0;
+
+While k <= len(P2)
+
+ 
+
+l=l+1;
+
+ 
+
+{
+
+   Vector AB = P1[i] – P2[j];
+
+   Vector AC = Coords[k][l]- P1[i];
+
+   float area = Vector(AB * AC).magnitude();
+
+   float CD = area / AB.magnitude();
+
+   return CD; #I assume CD is the shortest distance
+
+   #CD is the shortest distance using the line made from P1[0] to P2[0] the distance to point Coords[0][0]. If Coords[0][1] is closer to the line then keep that coordinate in memory and the distance in memory, else keep the distance and coordinate Coords[0][0] in memory. Do this for each P1[0] through len(P1) for every layer and every interior coordinate on each layer.
