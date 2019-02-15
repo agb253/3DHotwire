@@ -13,8 +13,8 @@ Repeat for every part.
  
 
 Here’s some code snippets to plug into the pseudocode:
-import re
 */
+import re
 with open(‘example.gcode’) as gcode:
 for line in gcode:
 line = line.strip() ##makes gcode coordinates into members of a list. Members of the list are called “line”
