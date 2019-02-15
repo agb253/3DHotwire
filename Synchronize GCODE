@@ -14,6 +14,7 @@ Repeat for every part.
 
 Here’s some code snippets to plug into the pseudocode:
 """
+'''python
 import re
 	with open(‘example.gcode’) as gcode:
 	for line in gcode:
@@ -22,6 +23,7 @@ import re
 	coord = re.findall(r'[XY].?\d+.\d+’, line) ##checks for match 0-9 even or 0-9 odd \d is odd numbers. Find in “line”,
 	if coord: ##meaning, if the line has numbers, the member “coord” will not be blank, if not blank –> print the coord
 	print(“{} – {}”.format(coord[0], coord[1])) ## instead of print, probably append this to a list. If we call this list “Coords”
+	'''
 """If this is some example gcode
 G1 F1200 X-9.914 Y-9.843 E3.36222
 G0 F9000 X-9.843 Y-9.914
