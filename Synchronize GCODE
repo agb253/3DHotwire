@@ -1,4 +1,4 @@
-The synchronization program will:
+''The synchronization program will:
 
 Read in the GCODE file.
 Remove everything except the coordinates.
@@ -11,269 +11,90 @@ Remain on the same point on P1 or P1[1], but now draw a line to the next coordin
 Repeat step 4 through 8 for every coordinate in P2[1 through n].
 Find the lowest OBJ[1,j]; that is the P2[j] coordinate that should be synchronized with P1[1].
 For every point on P1[1 through N], repeat step 4-10.
-Repeat for every part.
+Repeat for every part.''
 
-
-Here’s some code snippets to plug into the pseudocode (my additional code is in italics):
 import re
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename
+import time
+
+Tk().withdraw() 
+filename = askopenfilename()#prompt user to select the gcode file
+
+
+i=1
+coords= []
 coordinates = []
-Perimeters = []
-iter = 1
-
-with open('example.gcode') as gcode:
-for line in gcode:
-line = line.strip() ##makes gcode coordinates into members of a list. Members of the list are called "line"
-##probably add a line here to append to change to a new list if there is a layer change "New Layer" should be shown in gcode
-coord = re.findall(r'[XY].?\d+.\d+', line) ##checks for "X" or "Y" and match 0-9 even or 0-9 odd \d is odd numbers. Find in "line",
-if coord: ##meaning, if the line has numbers, the member "coord" will not be blank, if not blank --> print the coordinate
-print("{} - {}".format(coord[0], coord[1])) ## instead of print, probably append this to a list like this: coordinates.append(coord[0],coord[1],iter) and if line = "New Layer": Perimeters.append(coordinates)
-iter = iter +1
-##I added iter for a Z height (this would be what layer it is. This is somewhat arbitrary, but is need to calculate the distance between two points in 3D space)
-
-If this is some example gcode
-G1 F1200 X-9.914 Y-9.843 E3.36222
-G0 F9000 X-9.843 Y-9.914
-G1 F1200 X9.914 Y9.843 E3.65844
-G0 F9000 X9.914 Y9.702
-G1 F1200 X-9.702 Y-9.914 E3.95254
-G0 F9000 X-9.560 Y-9.914
-New Layer
-'G1 F1200 X9.914 Y8.995 E5.39123',
-'G0 F9000 X9.914 Y8.853',
-'G1 F1200 X-8.853 Y-9.914 E5.67260'
-Should end up with something like this:
-coordinates = [
-[9.914, -9.843,1]
-[9.843, -9.914,1]
-[9.702, -9.914,1]
-[9.560, -9.914,1],
-[8.995, -9.914,2]
-[9.914,8.853,2]
-[8.853, -9.914,2]
-]
-Perimeters = [[9.914, -9.843,1][9.843, -9.914,1][9.702, -9.914,1][9.560, -9.914,1], [[8.995, -9.914,2][9.914,8.853,2][8.853, -9.914,2]]
-
-I’m calling each layer by the name “layer” and each list I am calling “member”
--Separate P1 and P2 are the top and bottom perimeters (unnecessary, but might make it more clear)
-P1 = coordinates.pop(0) #returns and removes first list of coordinates from the list
-P2 = coordinates.pop(len(coordinates)-1) ##returns and removes last list of coordinates from the list. Since lists start with element 0 instead of 1, you need to use num of members-1.
-
-
-
-This is a program to calculate the shortest distance between a line (given by two points) and a point not on that line.
-
-https://www.geeksforgeeks.org/shortest-distance-between-a-line-and-a-point-in-a-3-d-plane/
-
-
-
-Shortest distance between a Line and a Point in a 3-D plane
-www.geeksforgeeks.org
-Given a line passing through two points A and B and an arbitrary point C in a 3-D plane, the task is to find the shortest distance between the point C and the line passing through the points A and B. Consider a point C and a line that passes through A and B as shown in the below figure. Now Consider ...
-
-
-// C++ program to find the Shortest
-
-// Distance Between A line and a
-
-// Given point. #Need to convert this to python
-
-#include<bits/stdc++.h>
-
-using namespace std;
-
-class Vector {
-
-private:
-
-   int x, y, z;
-
-   // 3D Coordinates of the Vector
-
-public:
-
-   Vector(int x, int y, int z)
-
-   {
-
-       // Constructor
-
-       this->x = x;
-
-       this->y = y;
-
-       this->z = z;
-
-   }
-
-   Vector operator+(Vector v); // ADD 2 Vectors
-
-   Vector operator-(Vector v); // Subtraction
-
-   int operator^(Vector v); // Dot Product
-
-   Vector operator*(Vector v); // Cross Product
-
-   float magnitude()
-
-   {
-
-       return sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
-
-   }
-
-   friend ostream& operator<<(ostream& out, const Vector& v);
-
-   // To output the Vector
-
-};
-
-// ADD 2 Vectors
-
-Vector Vector::operator+(Vector v)
-
-{
-
-   int x1, y1, z1;
-
-   x1 = x + v.x;
-
-   y1 = y + v.y;
-
-   z1 = z + v.z;
-
-   return Vector(x1, y1, z1);
-
-}
-
-// Subtract 2 vectors
-
-Vector Vector::operator-(Vector v)
-
-{
-
-   int x1, y1, z1;
-
-   x1 = x - v.x;
-
-   y1 = y - v.y;
-
-   z1 = z - v.z;
-
-   return Vector(x1, y1, z1);
-
-}
-
-// Dot product of 2 vectors
-
-int Vector::operator^(Vector v)
-
-{
-
-   int x1, y1, z1;
-
-   x1 = x * v.x;
-
-   y1 = y * v.y;
-
-   z1 = z * v.z;
-
-   return (x1 + y1 + z1);
-
-}
-
-// Cross product of 2 vectors
-
-Vector Vector::operator*(Vector v)
-
-{
-
-   int x1, y1, z1;
-
-   x1 = y * v.z - z * v.y;
-
-   y1 = z * v.x - x * v.z;
-
-   z1 = x * v.y - y * v.x;
-
-   return Vector(x1, y1, z1);
-
-}
-
-// Display Vector
-
-ostream& operator<<(ostream& out,
-
-                   const Vector& v)
-
-{
-
-   out << v.x << "i ";
-
-   if (v.y >= 0)
-
-       out << "+ ";
-
-   out << v.y << "j ";
-
-   if (v.z >= 0)
-
-       out << "+ ";
-
-   out << v.z << "k" << endl;
-
-   return out;
-
-}
-
-// calculate shortest dist. from point to line
-
-#Store the closest point to the line (closest interior perimeter point) for each interior layer and for each line given by points on the perimeters
-
-If I use the previous coordinates as an example of interior coordinates: coordinates = [
-[9.914, -9.843,1]
-[9.843, -9.914,1]
-[9.702, -9.914,1]
-[9.560, -9.914,1],
-[8.995, -9.914,2]
-[9.914,8.853,2]
-[8.853, -9.914,2]
-]
-
-Distance function(x1,y1,x2,y2,x3,y3) → outputs distance to line made by x1,y1,x2,y2 to point x3,y3.
-
-Then Coords[layer=0] would be [9.914, -9.843][9.843, -9.914][9.702, -9.914][9.560, -9.914]
-Then Coords[0,0] would be [9.914, -9.843]
-
-Take the first coordinate in P1 or P1[0] and first coordinate in P2 or P2[0], calculate distance to Coords[0,0] #this is the first coordinate in the first inner layer. Repeat with every Coords[0,n] and keep the coordinate with the shortest distance i = iterator. Repeat again with Coords[1,0 through n] for however many layers there are or Coords[n,n] j = iterator. Save the sum of the shortest distances to each layer. Repeat with P1[0] to P2[1 to n] k = iterator. Each time saving the sum of the shortest distances. Compare each P1[0] connection to P2[1 to n] to find the line that has the lowest sum of shortest distances. Once found, save that in a list [x1,y1] [x2,y2]. Repeat for every P1[0 through n] l = iterator.
-
-
-
-l=0;
-
-While I <= len(P1)
-
-k=0;
-
-While k <= len(P2)
-
-
-
-l=l+1;
-
-
-
-{
-
-   Vector AB = P1[i] - P2[j];
-
-   Vector AC = Coords[k][l]- P1[i];
-
-   float area = Vector(AB * AC).magnitude();
-
-   float CD = area / AB.magnitude();
-
-   return CD; #I assume CD is the shortest distance
-
-   #CD is the shortest distance using the line made from P1[0] to P2[0] the distance to point Coords[0][0]. If Coords[0][1] is closer to the line then keep that coordinate in memory and the distance in memory, else keep the distance and coordinate Coords[0][0] in memory. Do this for each P1[0] through len(P1) for every layer and every interior coordinate on each layer.
-
-}
+with open(filename) as gcode:
+
+    for line in gcode:
+        line = line.strip()
+        coord = re.findall(r'[XY].?\d+.\d+', line)
+        if coord:
+            a = coord[0]
+            b = coord[1]
+            aa = float(a[1:])
+            bb = float(b[1:])
+            c = [aa,bb,i]
+            coords.append(c)
+            i=i+1
+        elif "layer_num" in line:
+            coordinates.append(coords)
+            coords = []
+
+
+####calculate the shortest distance between a point and line(defined by two points)
+import numpy as np
+P1 = coordinates[1] #first layer is not coordinates[0] as that is blank
+P2 = coordinates[len(coordinates)-1]#last layer
+j = 0 #top profile coordinate iterator
+k = 0 #bottom profile iterator
+l = 2 #interior layer iterator. Starts at 2 because first layer is empty [], and the first layer is P1
+m = 0 #interior coordinate iterator
+min_dist = 99999999.9 #some large distance for each point in a layer
+sum_min_dist = 0
+lowest_dist = 9999999.9#some large distance for total of layer's minimum distance
+
+start = time.time()
+
+def distance(p, q, rs):
+    x = p-q
+    return np.linalg.norm(
+        np.outer(np.dot(rs-q, x)/np.dot(x, x), x)+q-rs,
+        axis=1)
+
+for sets in P1:
+    for points in P2:
+        while l < len(coordinates)-1: #don't count the first layer as it is blank [] and don't use P1, start at coordinates[2] to last coordinate -1
+            while m < len(coordinates[l]):
+                p = np.array(P1[j]) #coord of top profile
+                q = np.array(P2[k]) #coord of bottom profile
+                rs = np.array(coordinates[l][m])#interior layer at the m-th point
+                d = distance(p, q, rs)
+
+                if min_dist > d: #first time around min_dist should be large number, so this will be true
+                    min_dist = d #distance to the closest coordinate [m] on a layer [l]
+                    #print("min_dist " +str(min_dist))
+                m = m + 1 #next coordinate on the same layer [l]
+                #end result is min_dist is equal to the distance to the closest coordinate
+            sum_min_dist = sum_min_dist + min_dist #sum of the closest coordinate distances on each layer 
+
+            l = l +20 #next layer. You can skip layers by making l+ some number of skipped layers
+            min_dist = 9999999.9 #initialize at some large distance
+            m = 0
+            #which coordinate on P2 has the lowest sum_min_dist?
+        #print(sum_min_dist)
+        if sum_min_dist < lowest_dist: #if the sum of the closest distances for all layers is less than
+            lowest_dist = sum_min_dist #the previous lowest sum of closest distance, then it may be a synch point
+            synch_coord = P2[k] #so keep that new lowest distance and coordinate in memory
+
+        sum_min_dist = 0 #reset the sum of the closest coordinates and try the next coordinate on P2
+
+        k = k + 1 #try the next coordinate on P2
+        l = 2
+    print(str(P1[j]) +" and " +str(synch_coord))
+    end = time.time()
+    print(end - start)
+    j = j + 1 #next coordinate on P1
+    lowest_dist = 9999999.9 #some large number
+    k = 0
